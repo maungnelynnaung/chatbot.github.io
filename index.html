@@ -1,0 +1,362 @@
+<html>
+
+<!-- Peace Connect Chat — Wrapper V8 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" />
+
+<style>
+    :root {
+        --pc-green: #10b981;
+        --pc-green-dark: #059669;
+        --pc-text: #1f2937;
+
+        /* Theme official @n8n/chat */
+        --chat--color-primary: var(--pc-green);
+        --chat--color-primary-shade-50: #0ea371;
+        --chat--color-primary-shade-100: var(--pc-green-dark);
+        --chat--color-secondary: var(--pc-green-dark);
+        --chat--color-dark: var(--pc-text);
+
+        /* Window size */
+        --chat--window--width: 380px;
+        --chat--window--height: 560px;
+        --chat--border-radius: 18px;
+
+        /* Typography inside chat */
+        --chat--message--font-size: 0.98rem;
+        --chat--message-line-height: 1.6;
+        --chat--textarea--height: 50px;
+        --chat--font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    /* Launcher pill */
+    .pc-pill {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        padding: 12px 18px;
+        border: 0;
+        border-radius: 999px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--pc-green), var(--pc-green-dark));
+        box-shadow: 0 10px 24px rgba(16, 185, 129, 0.35);
+        font: 600 18px/1.1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 99998;
+    }
+
+    .pc-pill svg {
+        width: 24px;
+        height: 24px;
+        stroke: #fff;
+    }
+
+    /* Modal shell */
+    .pc-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.15);
+        display: grid;
+        place-items: end;
+        padding: 18px;
+        z-index: 99999;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    /* Card */
+    .pc-card {
+        width: min(420px, 92vw);
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        animation: pc-in .15s ease-out;
+    }
+
+    @keyframes pc-in {
+        from {
+            transform: translateY(10px);
+            opacity: 0
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1
+        }
+    }
+
+    /* Header */
+    .pc-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        background: linear-gradient(135deg, var(--pc-green), var(--pc-green-dark));
+        color: #fff;
+    }
+
+    .pc-header-left {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .pc-logo {
+        height: 28px;
+    }
+
+    .pc-header-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1;
+    }
+
+    .pc-close {
+        background: rgba(255, 255, 255, 0.14);
+        border: 0;
+        color: #fff;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 20px;
+        line-height: 32px;
+    }
+
+    /* Wrapper welcome + form */
+    .pc-welcome {
+        padding: 18px;
+        text-align: center;
+    }
+
+    .pc-welcome h2 {
+        margin: 8px 0 6px;
+        font-size: 22px;
+        color: var(--pc-text);
+    }
+
+    .pc-welcome p {
+        margin: 0 0 14px;
+        color: #6b7280;
+    }
+
+    .pc-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 44px;
+        padding: 0 18px;
+        border-radius: 10px;
+        border: 0;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .pc-btn-primary {
+        color: #fff;
+        background: linear-gradient(135deg, var(--pc-green), var(--pc-green-dark));
+        box-shadow: 0 12px 30px rgba(16, 185, 129, 0.3);
+    }
+
+    .pc-form {
+        padding: 18px;
+        display: grid;
+        gap: 12px;
+    }
+
+    .pc-form h3 {
+        margin: 0 0 4px;
+        font-size: 18px;
+        color: var(--pc-text);
+    }
+
+    .pc-form label {
+        font-size: 12px;
+        color: #374151;
+        display: grid;
+        gap: 6px;
+    }
+
+    .pc-form input {
+        height: 42px;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        padding: 0 12px;
+    }
+
+    /* Chat container */
+    #n8n-chat {
+        width: 100%;
+        height: 560px;
+        border-top: 1px solid #eef2f7;
+    }
+
+    /* Remove all n8n welcome/heading UI */
+    #n8n-chat .n8n-chat__welcome,
+    #n8n-chat [class*="welcome"],
+    #n8n-chat [data-testid*="welcome"],
+    #n8n-chat .chat-header,
+    #n8n-chat .chat-heading {
+        display: none !important;
+    }
+</style>
+
+<script type="module">
+    import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
+
+    /* === SET WEBHOOK === */
+    const WEBHOOK_URL = 'https://chatbot.peacedirect.org/webhook/9f7f1e95-6462-42e2-8184-2695afc8a9c4/chat';
+
+    const mountWrapper = () => {
+        if (document.getElementById('pc-launcher')) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+      <button id="pc-launcher" class="pc-pill" aria-label="Open Peace Direct chat">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+        </svg>
+        Need help?
+      </button>
+
+      <div id="pc-modal" class="pc-modal hidden" role="dialog" aria-modal="true" aria-label="Peace Direct Chat">
+        <div class="pc-card">
+          <div class="pc-header">
+            <div class="pc-header-left">
+              <img src="https://www.peacedirect.org/content/themes/peacedirect-custom/images/logo.svg" class="pc-logo" alt="Peace Direct">
+              <span class="pc-header-title">Conference Assistant</span>
+            </div>
+            <button id="pc-close" class="pc-close" aria-label="Close">×</button>
+          </div>
+
+          <div class="pc-welcome">
+            <h2>Get instant answers to your questions!</h2>
+            <p>Click the button below to start</p>
+            <button id="pc-start" class="pc-btn pc-btn-primary">Start chatting</button>
+          </div>
+
+          <form id="pc-form" class="pc-form hidden" autocomplete="off">
+            <h3>Please enter your details to start chatting</h3>
+            <label>Name
+              <input type="text" id="pc-name" placeholder="Your name" required>
+            </label>
+            <label>Email
+              <input type="email" id="pc-email" placeholder="you@email.com" required>
+            </label>
+            <button type="submit" class="pc-btn pc-btn-primary">Continue to Chat</button>
+          </form>
+
+          <div id="n8n-chat" class="hidden"></div>
+        </div>
+      </div>
+    `;
+        document.body.appendChild(wrapper);
+
+        // Helpers
+        const $ = (id) => document.getElementById(id);
+        const show = (x) => x.classList.remove('hidden');
+        const hide = (x) => x.classList.add('hidden');
+
+        // Elements
+        const launcher = $('pc-launcher');
+        const modal = $('pc-modal');
+        const closeBtn = $('pc-close');
+        const startBtn = $('pc-start');
+        const form = $('pc-form');
+        const nameIn = $('pc-name');
+        const emailIn = $('pc-email');
+        const chatBox = $('n8n-chat');
+        const welcome = modal.querySelector('.pc-welcome');
+
+        // Open / close
+        launcher.addEventListener('click', () => {
+            const n = localStorage.getItem('pc_user_name') || '';
+            const e = localStorage.getItem('pc_user_email') || '';
+            nameIn.value = n; emailIn.value = e;
+            show(modal);
+        });
+        closeBtn.addEventListener('click', () => hide(modal));
+        document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') hide(modal); });
+
+        // Welcome → form
+        startBtn.addEventListener('click', () => { hide(welcome); show(form); nameIn.focus(); });
+
+        // Mount chat after form submit
+        let chatMounted = false;
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const userName = nameIn.value.trim();
+            const userEmail = emailIn.value.trim();
+            if (!userName || !userEmail) return;
+
+            localStorage.setItem('pc_user_name', userName);
+            localStorage.setItem('pc_user_email', userEmail);
+
+            if (!chatMounted) {
+                createChat({
+                    webhookUrl: WEBHOOK_URL,
+                    chatInputKey: 'chatInput',
+                    chatSessionKey: 'sessionId',
+
+                    /* No internal welcome or headings */
+                    showWelcomeScreen: false,
+                    loadPreviousSession: false,
+
+                    /* Custom greeting */
+                    initialMessages: [
+                        `Welcome ${userName}! I am an AI assistant who speaks English, French, Spanish, and Arabic. Ask me about the agenda, speakers, rooms, or logistics in any of these languages, and I will reply in your preferred one. How can I assist you with the Peace Connect gathering today? `
+                    ],
+
+                    /* Explicitly blank title/subtitle to prevent fallback UI */
+                    i18n: {
+                        en: {
+                            title: '',
+                            subtitle: '',
+                            footer: '',
+                            getStarted: '',
+                            inputPlaceholder: 'Type your question...',
+                        },
+                    },
+
+                    target: '#n8n-chat',
+                    mode: 'fullscreen',
+                    defaultLanguage: 'en',
+
+                    metadata: { userName, userEmail, source: 'peaceconnect-prechat' },
+                });
+
+                // Safety net: remove any header/welcome if injected after mount
+                const killHeaderWelcome = () => {
+                    const sel = '.n8n-chat__welcome, [class*="welcome"], [data-testid*="welcome"], .chat-header, .chat-heading';
+                    document.querySelectorAll(`#n8n-chat ${sel}`).forEach(el => el.remove());
+                };
+                const mo = new MutationObserver(killHeaderWelcome);
+                mo.observe(chatBox, { childList: true, subtree: true });
+                setTimeout(killHeaderWelcome, 0);
+                setTimeout(killHeaderWelcome, 200);
+
+                chatMounted = true;
+            }
+
+            hide(form);
+            show(chatBox);
+        });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', mountWrapper);
+    } else {
+        mountWrapper();
+    }
+</script>
+
+
+</html>
