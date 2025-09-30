@@ -1,7 +1,21 @@
 <html>
 
-<!-- Peace Connect Chat — Wrapper V8 -->
+<!-- Container -->
+<div id="peace-connect-chat"></div>
+
+<!-- @n8n/chat styles -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" />
+
+<!-- Elza Condensed from Adobe Fonts -->
+<link rel="preconnect" href="https://use.typekit.net">
+<link rel="stylesheet" href="https://use.typekit.net/xhk5yyz.css">
+
+<!-- Merriweather from Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+    href="https://fonts.googleapis.com/css2?family=Merriweather:ital,opsz,wght@0,18..144,300;1,18..144,300&display=swap"
+    rel="stylesheet">
 
 <style>
     :root {
@@ -9,23 +23,54 @@
         --pc-green-dark: #059669;
         --pc-text: #1f2937;
 
-        /* Theme official @n8n/chat */
+        /* Theme variables for @n8n/chat */
         --chat--color-primary: var(--pc-green);
         --chat--color-primary-shade-50: #0ea371;
         --chat--color-primary-shade-100: var(--pc-green-dark);
         --chat--color-secondary: var(--pc-green-dark);
         --chat--color-dark: var(--pc-text);
-
-        /* Window size */
         --chat--window--width: 380px;
         --chat--window--height: 560px;
         --chat--border-radius: 18px;
 
-        /* Typography inside chat */
-        --chat--message--font-size: 0.98rem;
-        --chat--message-line-height: 1.6;
-        --chat--textarea--height: 50px;
-        --chat--font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        /* Important, make chat use Merriweather to match the site */
+        --chat--font-family: "Merriweather", serif;
+    }
+
+    :root {
+        --font-heading: "elza-condensed", sans-serif;
+        --font-body: "Merriweather", serif;
+    }
+
+    /* Page typography */
+    html,
+    body {
+        font-family: var(--font-body);
+        font-weight: 300;
+        font-style: normal;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    h1,
+    h2,
+    h3,
+    .header,
+    .brand,
+    .chat-title,
+    .widget-title {
+        font-family: var(--font-heading);
+        font-weight: 600;
+        /* adjust to 500 or 700 if you prefer */
+        letter-spacing: 0.2px;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+        font-family: var(--font-body);
+        font-weight: 300;
     }
 
     /* Launcher pill */
@@ -129,7 +174,7 @@
         line-height: 32px;
     }
 
-    /* Wrapper welcome + form */
+    /* Welcome + form */
     .pc-welcome {
         padding: 18px;
         text-align: center;
@@ -197,7 +242,7 @@
         border-top: 1px solid #eef2f7;
     }
 
-    /* Remove all n8n welcome/heading UI */
+    /* Remove n8n welcome or built-in headings */
     #n8n-chat .n8n-chat__welcome,
     #n8n-chat [class*="welcome"],
     #n8n-chat [data-testid*="welcome"],
@@ -205,12 +250,40 @@
     #n8n-chat .chat-heading {
         display: none !important;
     }
+
+    /* Hard-scope the close button to avoid theme overrides */
+    #pc-modal .pc-close {
+        width: 32px !important;
+        height: 32px !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 50% !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: rgba(255, 255, 255, 0.14) !important;
+        color: #fff !important;
+        cursor: pointer !important;
+        line-height: 1 !important;
+        font-size: 20px !important;
+        box-shadow: none !important;
+    }
+
+    /* Optional, keep it pinned at the right edge of the header */
+    #pc-modal .pc-header {
+        position: relative;
+    }
+
+    #pc-modal .pc-close {
+        position: relative;
+        right: 0;
+    }
 </style>
 
 <script type="module">
     import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
 
-    /* === SET WEBHOOK === */
+    /* Use the Adapter endpoint */
     const WEBHOOK_URL = 'https://n8n.peacedirect.org/webhook/9f7f1e95-6462-42e2-8184-2695afc8a9c4/chat';
 
     const mountWrapper = () => {
@@ -233,7 +306,7 @@
               <img src="https://www.peacedirect.org/content/themes/peacedirect-custom/images/logo.svg" class="pc-logo" alt="Peace Direct">
               <span class="pc-header-title">Conference Assistant</span>
             </div>
-            <button id="pc-close" class="pc-close" aria-label="Close">×</button>
+            <button id="pc-close" class="pc-close" aria-label="Close" type="button">&times;</button>
           </div>
 
           <div class="pc-welcome">
@@ -303,37 +376,27 @@
             if (!chatMounted) {
                 createChat({
                     webhookUrl: WEBHOOK_URL,
-                    chatInputKey: 'chatInput',
+                    chatInputKey: 'text',
                     chatSessionKey: 'sessionId',
 
-                    /* No internal welcome or headings */
                     showWelcomeScreen: false,
                     loadPreviousSession: false,
 
-                    /* Custom greeting */
                     initialMessages: [
                         `Welcome ${userName}! I am an AI assistant who speaks English, French, Spanish, and Arabic. Ask me about the agenda, speakers, rooms, or logistics in any of these languages, and I will reply in your preferred one. How can I assist you with the Peace Connect gathering today? `
                     ],
 
-                    /* Explicitly blank title/subtitle to prevent fallback UI */
                     i18n: {
-                        en: {
-                            title: '',
-                            subtitle: '',
-                            footer: '',
-                            getStarted: '',
-                            inputPlaceholder: 'Type your question...',
-                        },
+                        en: { title: '', subtitle: '', footer: '', getStarted: '', inputPlaceholder: 'Type your question...' },
                     },
 
                     target: '#n8n-chat',
                     mode: 'fullscreen',
                     defaultLanguage: 'en',
-
                     metadata: { userName, userEmail, source: 'peaceconnect-prechat' },
                 });
 
-                // Safety net: remove any header/welcome if injected after mount
+                // Safety net, remove any built-in header or welcome
                 const killHeaderWelcome = () => {
                     const sel = '.n8n-chat__welcome, [class*="welcome"], [data-testid*="welcome"], .chat-header, .chat-heading';
                     document.querySelectorAll(`#n8n-chat ${sel}`).forEach(el => el.remove());
@@ -357,6 +420,5 @@
         mountWrapper();
     }
 </script>
-
-
+    
 </html>
